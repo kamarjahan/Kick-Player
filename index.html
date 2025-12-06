@@ -133,12 +133,48 @@
             align-items: center;
             transition: opacity 0.5s ease;
         }
-        .modal-box { background: #191b1f; padding: 30px; border-radius: 16px; border: 1px solid #2d3035; text-align: center; width: 90%; max-width: 400px; }
-        .modal-title { color: #53fc18; font-size: 24px; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
-        .input-group { display: flex; gap: 10px; margin-top: 20px; }
-        .username-input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #2d3035; background: #0e0e10; color: white; outline: none; }
-        .username-input:focus { border-color: #53fc18; }
-        .watch-btn { padding: 12px 24px; background: #53fc18; color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .modal-box { 
+            background: #191b1f; 
+            padding: 30px; 
+            border-radius: 16px; 
+            border: 1px solid #2d3035; 
+            text-align: center; 
+            width: 90%; 
+            max-width: 400px; 
+        }
+        .modal-title { 
+            color: #53fc18; 
+            font-size: 24px; 
+            font-weight: 800; 
+            margin-bottom: 10px; 
+            text-transform: uppercase; 
+        }
+        .input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        .username-input { 
+            flex: 1; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #2d3035; 
+            background: #0e0e10; 
+            color: white; 
+            outline: none; 
+        }
+        .username-input:focus { 
+            border-color: #53fc18; 
+        }
+        .watch-btn { 
+            padding: 12px 24px; 
+            background: #53fc18; 
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            cursor: pointer; 
+        }
 
     </style>
 </head>
@@ -150,7 +186,7 @@
             <div style="color:#aaa; font-size:14px;">Enter streamer name:</div>
             <div class="input-group">
                 <input type="text" id="streamerName" class="username-input" placeholder="e.g. xqc" autocomplete="off">
-                <button class="watch-btn" onclick="startStream()">Watch</button>
+                <button class="watch-btn" onclick="handleManualStart()">Watch</button>
             </div>
         </div>
     </div>
@@ -158,7 +194,7 @@
     <div class="stream-wrapper" id="playerWrapper">
         
         <div class="stream-header" id="overlayMenu">
-            <div class="live-badge">Live</div>
+            <div class="live-badge" id="liveBadge">Live</div>
             
             <div class="controls-group">
                 <button class="icon-btn" onclick="reloadStream()" title="Refresh Stream">
@@ -196,24 +232,53 @@
         const refreshIcon = document.getElementById('refreshIcon');
         const overlay = document.getElementById('overlayMenu');
         const wrapper = document.getElementById('playerWrapper');
+        const badge = document.getElementById('liveBadge');
 
         // --- 1. Startup Logic ---
-        input.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") startStream();
+        
+        // Check URL on load (THIS IS THE NEW PART)
+        window.addEventListener('load', () => {
+            // Get the path (e.g., /xqc) and remove the slash
+            const path = window.location.pathname.replace(/^\//, ''); 
+            
+            // If there is a path (like /xqc), load it immediately
+            if(path && path !== "") {
+                loadStreamer(path);
+            }
         });
 
-        function startStream() {
+        // Handle Enter key in modal
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") handleManualStart();
+        });
+
+        // Triggered by button click
+        function handleManualStart() {
             const username = input.value.trim();
             if (!username) return alert("Enter a name!");
+            
+            // Change the URL without reloading (THIS IS THE NEW PART)
+            window.history.pushState({path: username}, '', '/' + username);
+            
+            loadStreamer(username);
+        }
+
+        // The core function to load the video and UI
+        function loadStreamer(username) {
             iframe.src = `https://player.kick.com/${username}?autoplay=true&muted=false`;
+            
+            // Hide Modal
             modal.style.opacity = '0';
             setTimeout(() => { modal.style.display = 'none'; }, 500);
-            
+
+            // Update Badge Title
+            badge.innerText = username;
+
             // Start the auto-hide timer once stream starts
             resetIdleTimer();
         }
 
-        // --- 2. Refresh Logic ---
+        // --- 2. Standard Controls ---
         function reloadStream() {
             refreshIcon.classList.add("spin-anim");
             setTimeout(() => { refreshIcon.classList.remove("spin-anim"); }, 500);
