@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kick Player</title>
+    <title>Kick Player + Chat</title>
     <style>
         /* --- 1. Base Styles --- */
         body {
@@ -19,12 +19,11 @@
             overflow: hidden;
         }
 
-        /* --- 2. Main Layout (Flexbox) --- */
+        /* --- 2. Main Layout --- */
         .stream-wrapper {
             width: 100%;
-            height: 100%; /* Full screen height */
-            max-width: 100%;
-            display: flex; /* Side by side layout */
+            height: 100%;
+            display: flex;
             background: #000;
             position: relative;
             overflow: hidden;
@@ -32,13 +31,12 @@
 
         /* --- 3. Video Section --- */
         .video-container {
-            flex: 1; /* Takes remaining space */
+            flex: 1;
             position: relative;
             background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s ease;
         }
 
         .kick-video {
@@ -49,7 +47,7 @@
 
         /* --- 4. Chat Section --- */
         .chat-container {
-            width: 350px; /* Default chat width */
+            width: 350px;
             background: #0e0e10;
             border-left: 1px solid #2d3035;
             transition: margin-right 0.3s ease, transform 0.3s ease;
@@ -63,29 +61,27 @@
             border: none;
         }
 
-        /* Class to hide chat (slide it off screen) */
         .chat-hidden {
-            margin-right: -350px; /* Pulls it off screen to the right */
-            display: none; /* fully remove from DOM flow for mobile */
+            margin-right: -350px;
+            display: none;
         }
         
-        /* Mobile: Chat becomes an overlay */
         @media (max-width: 768px) {
             .chat-container {
                 position: absolute;
                 right: 0;
                 top: 0;
                 height: 100%;
-                width: 80%; /* Takes 80% of phone screen */
+                width: 80%;
                 margin-right: 0;
-                transform: translateX(100%); /* Start hidden */
+                transform: translateX(100%);
             }
             .chat-visible-mobile {
-                transform: translateX(0); /* Slide in */
+                transform: translateX(0);
                 display: block;
             }
             .chat-hidden {
-                display: block; /* Reset desktop hide style */
+                display: block; 
                 margin-right: 0;
             }
         }
@@ -95,7 +91,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%; /* Spans video AND chat */
+            width: 100%;
             height: 60px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
             display: flex;
@@ -132,7 +128,7 @@
         }
 
         .icon-btn:hover { background: #53fc18; color: black; border-color: #53fc18; }
-        .icon-btn.active { background: #53fc18; color: black; } /* Active state style */
+        .icon-btn.active { background: #53fc18; color: black; }
 
         .live-badge {
             background-color: #53fc18;
@@ -165,10 +161,8 @@
             border: none; border-radius: 6px; font-weight: bold; cursor: pointer; 
         }
 
-        /* Animation */
         .spin-anim { animation: spin 0.5s linear; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-
     </style>
 </head>
 <body>
@@ -184,19 +178,15 @@
     </div>
 
     <div class="stream-wrapper" id="playerWrapper">
-        
         <div class="stream-header" id="overlayMenu">
             <div class="live-badge" id="liveBadge">OFFLINE</div>
-            
             <div class="controls-group">
                 <button class="icon-btn" onclick="reloadStream()" title="Refresh">
                     <svg id="refreshIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                 </button>
-
                 <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
                 </button>
-
                 <button class="icon-btn active" id="chatToggleBtn" onclick="toggleChat()" title="Toggle Chat">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 </button>
@@ -206,11 +196,9 @@
         <div class="video-container">
             <iframe id="kickPlayer" class="kick-video" src="" allowfullscreen="true" scrolling="no" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
         </div>
-
         <div class="chat-container" id="chatBox">
             <iframe id="kickChat" class="kick-chat" src=""></iframe>
         </div>
-
     </div>
 
     <script>
@@ -221,15 +209,22 @@
         const chatBox = document.getElementById('chatBox');
         const chatBtn = document.getElementById('chatToggleBtn');
         const badge = document.getElementById('liveBadge');
-        
-        let currentStreamer = "";
 
-        // --- 1. Startup ---
+        // --- 1. Startup Logic (Fixed for GitHub Pages) ---
         window.addEventListener('load', () => {
-            const path = window.location.pathname.replace(/^\//, ''); 
-            if(path && path !== "") {
-                loadStreamer(path);
+            // We check for the HASH (#) now, which is safer.
+            // Example: mysite.com/#xqc
+            const hash = window.location.hash.replace('#', '');
+            
+            if(hash && hash !== "") {
+                loadStreamer(hash);
             }
+        });
+
+        // Listen for hash changes (if user hits back/forward button)
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.replace('#', '');
+            if(hash) loadStreamer(hash);
         });
 
         input.addEventListener("keypress", (e) => { if (e.key === "Enter") handleManualStart(); });
@@ -237,17 +232,16 @@
         function handleManualStart() {
             const username = input.value.trim();
             if (!username) return;
-            window.history.pushState({path: username}, '', '/' + username);
-            loadStreamer(username);
+            
+            // Set the hash (this updates URL without reloading)
+            window.location.hash = username; 
+            // The 'hashchange' listener above will catch this and call loadStreamer
         }
 
         function loadStreamer(username) {
-            currentStreamer = username;
-            
             // Load Video
             videoFrame.src = `https://player.kick.com/${username}?autoplay=true&muted=false`;
-            
-            // Load Chat (Kick Embed Format)
+            // Load Chat
             chatFrame.src = `https://kick.com/embed/chat/${username}/v1`;
 
             // UI Updates
@@ -260,28 +254,23 @@
         // --- 2. Chat Toggle Logic ---
         function toggleChat() {
             const isMobile = window.innerWidth <= 768;
-
             if (isMobile) {
-                // Mobile: Toggle overlay class
                 chatBox.classList.toggle('chat-visible-mobile');
             } else {
-                // Desktop: Toggle CSS display/margin
                 if (chatBox.style.display === 'none') {
                     chatBox.style.display = 'block';
-                    // Small delay to allow CSS transition if you wanted to animate width
                 } else {
                     chatBox.style.display = 'none';
                 }
             }
-
-            // Visual update for button
             chatBtn.classList.toggle('active');
         }
 
         // --- 3. Utility ---
         function reloadStream() {
-            document.getElementById('refreshIcon').classList.add("spin-anim");
-            setTimeout(() => { document.getElementById('refreshIcon').classList.remove("spin-anim"); }, 500);
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add("spin-anim");
+            setTimeout(() => { icon.classList.remove("spin-anim"); }, 500);
             if(videoFrame.src) {
                 const vSrc = videoFrame.src;
                 videoFrame.src = '';
@@ -320,7 +309,6 @@
         wrapper.addEventListener('mousemove', resetIdleTimer);
         wrapper.addEventListener('click', resetIdleTimer);
         wrapper.addEventListener('touchstart', resetIdleTimer);
-
     </script>
 </body>
 </html>
