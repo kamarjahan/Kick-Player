@@ -2,41 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Kick Player</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Kick Player</title>
     <style>
-        /* --- 1. Base Styles --- */
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #0e0e10;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: white;
-            overflow: hidden;
+        :root {
+            --bg: #0e0e10;
+            --panel: #191b1f;
+            --panel-border: #2d3035;
+            --text: #ffffff;
+            --muted: #a6abb6;
+            --accent: #53fc18;
         }
 
-        /* --- 2. Stream Wrapper --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background-color: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            color: var(--text);
+            overflow-x: hidden;
+            display: grid;
+            place-items: center;
+        }
+
+        .app-shell {
+            width: min(100%, 1280px);
+            display: grid;
+            gap: 12px;
+        }
+
+        .feature-bar {
+            background: rgba(25, 27, 31, 0.88);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-list {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 2px;
+            scrollbar-width: thin;
+        }
+
+        .quick-chip {
+            background: rgba(255, 255, 255, 0.08);
+            color: #dfe6f4;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .quick-chip.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .stream-wrapper {
             width: 100%;
-            max-width: 1280px;
             margin: 0 auto;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border-radius: 12px;
-            overflow: hidden; /* Important for rounding */
+            overflow: hidden;
             background: #000;
-            /* Transition for cursor hiding */
             cursor: default;
         }
 
         .video-container {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            padding-bottom: 56.25%;
             background: #000;
         }
 
@@ -49,44 +100,41 @@
             border: none;
         }
 
-        /* --- 3. Overlay Header (The Menu) --- */
         .stream-header {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 70px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+            min-height: 62px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), transparent);
             display: flex;
-            justify-content: space-between; /* Space items to edges */
+            justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
-            box-sizing: border-box;
+            gap: 10px;
+            padding: 10px 12px;
             z-index: 10;
-             
-            /* Smooth Fade Animation */
             opacity: 1;
-            transition: opacity 0.4s ease-in-out;
-            pointer-events: none; /* Allows clicks to pass through empty space */
+            transition: opacity 0.35s ease-in-out;
+            pointer-events: none;
         }
 
-        /* Class to hide the menu */
         .stream-header.hidden {
             opacity: 0;
         }
 
-        /* --- 4. Button Styles --- */
         .controls-group {
             display: flex;
-            gap: 10px;
-            pointer-events: auto; /* Re-enable clicks for buttons */
+            gap: 8px;
+            pointer-events: auto;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .icon-btn {
             background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             color: white;
-            width: 40px; /* Square buttons */
+            width: 40px;
             height: 40px;
             border-radius: 8px;
             cursor: pointer;
@@ -97,107 +145,193 @@
             transition: all 0.2s ease;
         }
 
-        .icon-btn:hover {
+        .icon-btn:hover,
+        .icon-btn:focus-visible {
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
+            outline: none;
         }
 
         .live-badge {
-            background-color: #53fc18;
+            background-color: var(--accent);
             color: #000;
-            padding: 5px 10px;
+            padding: 6px 10px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             pointer-events: auto;
+            max-width: 45vw;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        /* Animation for Refresh */
-        .spin-anim { animation: spin 0.5s linear; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin-anim {
+            animation: spin 0.5s linear;
+        }
 
-        /* --- 5. Setup Modal --- */
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
             backdrop-filter: blur(8px);
             z-index: 999;
             display: flex;
             justify-content: center;
             align-items: center;
             transition: opacity 0.5s ease;
-        }
-        .modal-box { 
-            background: #191b1f; 
-            padding: 30px; 
-            border-radius: 16px; 
-            border: 1px solid #2d3035; 
-            text-align: center; 
-            width: 90%; 
-            max-width: 400px; 
-        }
-        .modal-title { 
-            color: #53fc18; 
-            font-size: 24px; 
-            font-weight: 800; 
-            margin-bottom: 10px; 
-            text-transform: uppercase; 
-        }
-        .input-group { 
-            display: flex; 
-            gap: 10px; 
-            margin-top: 20px; 
-        }
-        .username-input { 
-            flex: 1; 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #2d3035; 
-            background: #0e0e10; 
-            color: white; 
-            outline: none; 
-        }
-        .username-input:focus { 
-            border-color: #53fc18; 
-        }
-        .watch-btn { 
-            padding: 12px 24px; 
-            background: #53fc18; 
-            color: #000; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 700; 
-            cursor: pointer; 
+            padding: 16px;
         }
 
+        .modal-box {
+            background: var(--panel);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--panel-border);
+            text-align: center;
+            width: min(100%, 420px);
+        }
+
+        .modal-title {
+            color: var(--accent);
+            font-size: clamp(20px, 5vw, 24px);
+            font-weight: 800;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .helper {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .username-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: #0e0e10;
+            color: white;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .username-input:focus {
+            border-color: var(--accent);
+        }
+
+        .watch-btn {
+            padding: 12px 18px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .status-text {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--muted);
+            min-height: 18px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 16px;
+            background: rgba(25, 27, 31, 0.95);
+            border: 1px solid var(--panel-border);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .stream-wrapper {
+                border-radius: 10px;
+            }
+
+            .stream-header {
+                padding: 10px;
+            }
+
+            .controls-group {
+                gap: 6px;
+            }
+
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .watch-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="modal-overlay" id="setupModal">
-        <div class="modal-box">
-            <div class="modal-title">Kick Player</div>
-            <div style="color:#aaa; font-size:14px;">Enter streamer name:</div>
-            <div class="input-group">
-                <input type="text" id="streamerName" class="username-input" placeholder="e.g. xqc" autocomplete="off">
-                <button class="watch-btn" onclick="handleManualStart()">Watch</button>
-            </div>
+<div class="modal-overlay" id="setupModal">
+    <div class="modal-box">
+        <div class="modal-title">Kick Player</div>
+        <div class="helper">Enter streamer name (letters, numbers, underscore).</div>
+        <div class="input-group">
+            <input type="text" id="streamerName" class="username-input" placeholder="e.g. xqc" autocomplete="off" aria-label="Streamer name">
+            <button class="watch-btn" onclick="handleManualStart()">Watch</button>
         </div>
+        <div class="status-text" id="statusText">Tip: Press <b>F</b> for fullscreen, <b>R</b> to refresh.</div>
+    </div>
+</div>
+
+<div class="app-shell">
+    <div class="feature-bar" id="featureBar" hidden>
+        <div class="helper">Recent</div>
+        <div class="quick-list" id="recentList"></div>
     </div>
 
     <div class="stream-wrapper" id="playerWrapper">
-        
         <div class="stream-header" id="overlayMenu">
             <div class="live-badge" id="liveBadge">Live</div>
-            
+
             <div class="controls-group">
-                <button class="icon-btn" onclick="reloadStream()" title="Refresh Stream">
+                <button class="icon-btn" onclick="reloadStream()" title="Refresh Stream" aria-label="Refresh stream">
                     <svg id="refreshIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M23 4v6h-6"></path>
                         <path d="M1 20v-6h6"></path>
@@ -205,7 +339,14 @@
                     </svg>
                 </button>
 
-                <button class="icon-btn" onclick="toggleFullscreen()" title="Full Screen">
+                <button class="icon-btn" onclick="copyLink()" title="Copy Share Link" aria-label="Copy share link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </button>
+
+                <button class="icon-btn" onclick="toggleFullscreen()" title="Full Screen" aria-label="Toggle fullscreen">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                     </svg>
@@ -214,123 +355,229 @@
         </div>
 
         <div class="video-container">
-            <iframe 
+            <iframe
                 id="kickPlayer"
                 class="kick-iframe"
-                src="" 
+                src=""
                 allowfullscreen="true"
                 scrolling="no"
                 allow="autoplay; encrypted-media; picture-in-picture">
             </iframe>
         </div>
     </div>
+</div>
 
-    <script>
-        const modal = document.getElementById('setupModal');
-        const input = document.getElementById('streamerName');
-        const iframe = document.getElementById('kickPlayer');
-        const refreshIcon = document.getElementById('refreshIcon');
-        const overlay = document.getElementById('overlayMenu');
-        const wrapper = document.getElementById('playerWrapper');
-        const badge = document.getElementById('liveBadge');
+<div class="toast" id="toast"></div>
 
-        // --- 1. Startup Logic ---
-        
-        // Check URL on load (THIS IS THE NEW PART)
-        window.addEventListener('load', () => {
-            // Get the path (e.g., /xqc) and remove the slash
-            const path = window.location.pathname.replace(/^\//, ''); 
-            
-            // If there is a path (like /xqc), load it immediately
-            if(path && path !== "") {
-                loadStreamer(path);
-            }
+<script>
+    const modal = document.getElementById('setupModal');
+    const input = document.getElementById('streamerName');
+    const iframe = document.getElementById('kickPlayer');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const overlay = document.getElementById('overlayMenu');
+    const wrapper = document.getElementById('playerWrapper');
+    const badge = document.getElementById('liveBadge');
+    const recentList = document.getElementById('recentList');
+    const featureBar = document.getElementById('featureBar');
+    const toast = document.getElementById('toast');
+    const statusText = document.getElementById('statusText');
+
+    let idleTimer;
+    let currentStreamer = '';
+
+    const STORAGE_KEY = 'kickPlayerRecent';
+
+    window.addEventListener('load', () => {
+        renderRecentList();
+        const path = window.location.pathname.replace(/^\//, '');
+        if (path) {
+            loadStreamer(path, false);
+        }
+    });
+
+    window.addEventListener('popstate', () => {
+        const path = window.location.pathname.replace(/^\//, '');
+        if (path) {
+            loadStreamer(path, false);
+        } else {
+            showModal();
+        }
+    });
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') handleManualStart();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (modal.style.display !== 'none' && event.key.toLowerCase() !== 'escape') return;
+
+        if (event.key.toLowerCase() === 'f') toggleFullscreen();
+        if (event.key.toLowerCase() === 'r') reloadStream();
+    });
+
+    function sanitizeUsername(value) {
+        return value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    }
+
+    function handleManualStart() {
+        const username = sanitizeUsername(input.value.trim());
+        if (!username) {
+            statusText.textContent = 'Please enter a valid username.';
+            input.focus();
+            return;
+        }
+
+        window.history.pushState({ path: username }, '', '/' + username);
+        loadStreamer(username, true);
+    }
+
+    function loadStreamer(username, saveRecent) {
+        currentStreamer = sanitizeUsername(username);
+        if (!currentStreamer) {
+            showModal();
+            return;
+        }
+
+        iframe.src = `https://player.kick.com/${currentStreamer}?autoplay=true&muted=false`;
+        badge.innerText = currentStreamer;
+
+        if (saveRecent) {
+            saveRecentStreamer(currentStreamer);
+        }
+
+        hideModal();
+        resetIdleTimer();
+        highlightActiveChip();
+        showToast(`Now watching ${currentStreamer}`);
+    }
+
+    function hideModal() {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    function showModal() {
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        input.focus();
+    }
+
+    function reloadStream() {
+        refreshIcon.classList.add('spin-anim');
+        setTimeout(() => {
+            refreshIcon.classList.remove('spin-anim');
+        }, 500);
+
+        if (iframe.src) {
+            const currentSrc = iframe.src;
+            iframe.src = '';
+            setTimeout(() => {
+                iframe.src = currentSrc;
+            }, 100);
+            showToast('Stream reloaded');
+        }
+    }
+
+    async function copyLink() {
+        if (!currentStreamer) return;
+        const url = `${window.location.origin}/${currentStreamer}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast('Share link copied');
+        } catch (error) {
+            showToast('Could not copy automatically');
+        }
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            if (wrapper.requestFullscreen) wrapper.requestFullscreen();
+            else if (wrapper.webkitRequestFullscreen) wrapper.webkitRequestFullscreen();
+            else if (wrapper.msRequestFullscreen) wrapper.msRequestFullscreen();
+        } else if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+
+    function showMenu() {
+        overlay.classList.remove('hidden');
+        wrapper.style.cursor = 'default';
+    }
+
+    function hideMenu() {
+        overlay.classList.add('hidden');
+        wrapper.style.cursor = 'none';
+    }
+
+    function resetIdleTimer() {
+        showMenu();
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(hideMenu, 2200);
+    }
+
+    wrapper.addEventListener('mousemove', resetIdleTimer);
+    wrapper.addEventListener('click', resetIdleTimer);
+    wrapper.addEventListener('touchstart', resetIdleTimer);
+
+    function getRecentStreamers() {
+        try {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveRecentStreamer(username) {
+        const items = getRecentStreamers().filter((item) => item !== username);
+        items.unshift(username);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 8)));
+        renderRecentList();
+    }
+
+    function renderRecentList() {
+        const items = getRecentStreamers();
+        recentList.innerHTML = '';
+
+        if (!items.length) {
+            featureBar.hidden = true;
+            return;
+        }
+
+        featureBar.hidden = false;
+
+        items.forEach((name) => {
+            const chip = document.createElement('button');
+            chip.className = 'quick-chip';
+            chip.textContent = name;
+            chip.onclick = () => {
+                input.value = name;
+                window.history.pushState({ path: name }, '', '/' + name);
+                loadStreamer(name, false);
+            };
+            recentList.appendChild(chip);
         });
 
-        // Handle Enter key in modal
-        input.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") handleManualStart();
+        highlightActiveChip();
+    }
+
+    function highlightActiveChip() {
+        const chips = document.querySelectorAll('.quick-chip');
+        chips.forEach((chip) => {
+            chip.classList.toggle('active', chip.textContent === currentStreamer);
         });
+    }
 
-        // Triggered by button click
-        function handleManualStart() {
-            const username = input.value.trim();
-            if (!username) return alert("Enter a name!");
-            
-            // Change the URL without reloading (THIS IS THE NEW PART)
-            window.history.pushState({path: username}, '', '/' + username);
-            
-            loadStreamer(username);
-        }
-
-        // The core function to load the video and UI
-        function loadStreamer(username) {
-            iframe.src = `https://player.kick.com/${username}?autoplay=true&muted=false`;
-            
-            // Hide Modal
-            modal.style.opacity = '0';
-            setTimeout(() => { modal.style.display = 'none'; }, 500);
-
-            // Update Badge Title
-            badge.innerText = username;
-
-            // Start the auto-hide timer once stream starts
-            resetIdleTimer();
-        }
-
-        // --- 2. Standard Controls ---
-        function reloadStream() {
-            refreshIcon.classList.add("spin-anim");
-            setTimeout(() => { refreshIcon.classList.remove("spin-anim"); }, 500);
-            if(iframe.src) {
-                const currentSrc = iframe.src;
-                iframe.src = ''; 
-                setTimeout(() => { iframe.src = currentSrc; }, 100);
-            }
-        }
-
-        // --- 3. Full Screen Logic ---
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                if (wrapper.requestFullscreen) {
-                    wrapper.requestFullscreen();
-                } else if (wrapper.webkitRequestFullscreen) { /* Safari */
-                    wrapper.webkitRequestFullscreen();
-                } else if (wrapper.msRequestFullscreen) { /* IE11 */
-                    wrapper.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
-
-        // --- 4. Auto-Hide Menu Logic ---
-        let idleTimer;
-        
-        function showMenu() {
-            overlay.classList.remove('hidden');
-            wrapper.style.cursor = 'default'; // Show cursor
-        }
-
-        function hideMenu() {
-            overlay.classList.add('hidden');
-            wrapper.style.cursor = 'none'; // Hide cursor for immersion
-        }
-
-        function resetIdleTimer() {
-            showMenu();
-            clearTimeout(idleTimer);
-            // Hide after 2000ms (2 seconds) of no movement
-            idleTimer = setTimeout(hideMenu, 2000);
-        }
-
-        // Listen for mouse movement or touches on the wrapper
-        wrapper.addEventListener('mousemove', resetIdleTimer);
-        wrapper.addEventListener('click', resetIdleTimer);
-        wrapper.addEventListener('touchstart', resetIdleTimer); // Mobile support
-
-    </script>
+    let toastTimer;
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 1800);
+    }
+</script>
 </body>
 </html>
